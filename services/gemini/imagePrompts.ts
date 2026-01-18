@@ -1,6 +1,7 @@
-import { CreativeFormat } from "../../types";
+
+import { CreativeFormat, UGCAvatar } from "../../types";
 import { generateWithRetry } from "./client";
-import { PromptContext } from "./imageUtils";
+import { PromptContext, getAvatarVisuals } from "./imageUtils";
 import { getFormatTextGuide } from "./imageText"; 
 
 /**
@@ -34,68 +35,110 @@ export const generateAIWrittenPrompt = async (ctx: PromptContext): Promise<strin
         project, format, 
         parsedAngle, 
         fullStoryContext,
-        rawPersona
+        rawPersona,
+        embeddedText
     } = ctx;
+
+    // Detect Video Format for Storyboard Generation
+    const isVideoFormat = format.startsWith('Video') || format.includes('VSL') || format.includes('Hook');
 
     // 1. STRATEGY STACK
     const strategyStack = {
         product: project.productName,
         description: project.productDescription,
         country: project.targetCountry || "General",
-        hook: parsedAngle.cleanAngle, // HOOK DIAMBIL DARI SINI
+        hook: parsedAngle.cleanAngle, 
         persona: rawPersona?.profile || "Target Customer",
         painPoint: rawPersona?.visceralSymptoms?.[0] || "General Pain",
         identity: fullStoryContext?.meta?.voiceAnchor || "Adaptive Persona",
         format: format,
-        uiGuide: getFormatTextGuide(format)
+        uiGuide: getFormatTextGuide(format),
+        // Extract Avatar Visuals if present
+        avatarVisuals: fullStoryContext?.avatar ? getAvatarVisuals(fullStoryContext.avatar) : ctx.personaVisuals
     };
 
     // 2. DYNAMIC THINKING PROMPT
-    const systemPrompt = `
-    ROLE: World-Class AI Creative Director & Copywriter (Nano Banana System).
-    
-    TASK: Analyze the Strategic Context and generate a high-fidelity Image Prompt + Text Overlay.
+    let systemPrompt = "";
 
-    *** 🧠 STEP 1: THE STRATEGIC CONTEXT ***
-    - PRODUCT: ${strategyStack.product}
-    - TARGET COUNTRY: ${strategyStack.country} (Language: Native & Localized)
-    - FORMAT: ${strategyStack.format}
-    - IDENTITY (Voice): ${strategyStack.identity}
-    
-    =========== THE CORE MESSAGE ===========
-    - MARKETING HOOK: "${strategyStack.hook}"
-    - PERSONA PAIN: "${strategyStack.painPoint}"
-    ========================================
+    if (isVideoFormat) {
+         // --- VIDEO STORYBOARD LOGIC ---
+         systemPrompt = `
+         ROLE: Storyboard Artist & Video Director.
+         
+         TASK: Create a detailed Image Prompt for a **3x3 Grid Storyboard** (9 Panels total) representing a short UGC video ad.
+         
+         *** 🎞️ VIDEO CONTEXT ***
+         - FORMAT: 9:16 Vertical Video (Instagram Story/Reels).
+         - AVATAR: ${strategyStack.avatarVisuals}
+         - HOOK: "${strategyStack.hook}"
+         - PRODUCT: ${strategyStack.product}
+         
+         *** 🎬 STORYBOARD STRUCTURE (3x3 GRID) ***
+         The image MUST be a grid of 9 frames showing the video progression:
+         - Frame 1 (00:00): The Hook (Shocking face or Text Hook).
+         - Frame 2 (00:02): The Problem (Show the struggle).
+         - Frame 3 (00:04): Agitation (Zoom in on pain).
+         - Frame 4 (00:06): The Solution (Product Reveal).
+         - Frame 5 (00:08): Demo (Applying/Using it).
+         - Frame 6 (00:10): Reaction (Wow face).
+         - Frame 7 (00:12): Benefit (Result).
+         - Frame 8 (00:14): Social Proof (Before/After).
+         - Frame 9 (00:16): CTA (Holding product).
+         
+         **YOUR MISSION:**
+         Write a single descriptive prompt for Gemini Image Generation that explicitly asks for a "3x3 grid storyboard".
+         Describe the Avatar in detail in the prompt.
+         
+         **OUTPUT:** Return ONLY the final prompt paragraph.
+         `;
+    } else {
+        // --- STANDARD IMAGE LOGIC ---
+        systemPrompt = `
+        ROLE: World-Class AI Creative Director & Copywriter (Nano Banana System).
+        
+        TASK: Analyze the Strategic Context and generate a high-fidelity Image Prompt + Text Overlay.
 
-    *** ✍️ STEP 2: DYNAMIC COPYWRITING (THINK & WRITE) ***
-    You must determine the writing style YOURSELF based on the Context above.
-    
-    **LOGIC PROTOCOL:**
-    IF Format is 'Twitter/Reddit/Text' -> Use raw, lower-case, typos, internet slang.
-    IF Format is 'Notification/Chat' -> Use urgent, intimate, short bursts.
-    IF Identity is 'Skeptic' -> Be cynical, questioning, use words like "scam", "honest".
-    IF Identity is 'Authority' -> Be professional, use data, clear grammar.
-    
-    **YOUR MISSION:**
-    Write the text overlay based on the MARKETING HOOK: "${strategyStack.hook}".
-    - Do NOT just copy the hook. ADAPT it to the format.
-    - LANGUAGE: ${strategyStack.country} Native.
+        *** 🧠 STEP 1: THE STRATEGIC CONTEXT ***
+        - PRODUCT: ${strategyStack.product}
+        - TARGET COUNTRY: ${strategyStack.country} (Language: Native & Localized)
+        - FORMAT: ${strategyStack.format}
+        - IDENTITY (Voice): ${strategyStack.identity}
+        
+        =========== THE CORE MESSAGE ===========
+        - MARKETING HOOK: "${strategyStack.hook}"
+        - PERSONA PAIN: "${strategyStack.painPoint}"
+        ========================================
 
-    *** 🎨 STEP 3: VISUAL EXECUTION ***
-    Create the final image prompt.
-    1. **CONTAINER:** Strictly follow these UI Rules: ${strategyStack.uiGuide}
-    2. **SCENE:** Visualise the environment where this Persona (${strategyStack.identity}) lives.
-    3. **TEXT INJECTION:**
-       You MUST explicitly write: "The image features text that says: '[YOUR GENERATED TEXT]'."
+        *** ✍️ STEP 2: DYNAMIC COPYWRITING (THINK & WRITE) ***
+        You must determine the writing style YOURSELF based on the Context above.
+        
+        **LOGIC PROTOCOL:**
+        IF Format is 'Twitter/Reddit/Text' -> Use raw, lower-case, typos, internet slang.
+        IF Format is 'Notification/Chat' -> Use urgent, intimate, short bursts.
+        IF Identity is 'Skeptic' -> Be cynical, questioning, use words like "scam", "honest".
+        IF Identity is 'Authority' -> Be professional, use data, clear grammar.
+        
+        **YOUR MISSION:**
+        Write the text overlay based on the MARKETING HOOK: "${strategyStack.hook}".
+        - Do NOT just copy the hook. ADAPT it to the format.
+        - LANGUAGE: ${strategyStack.country} Native.
 
-    **OUTPUT:** Return ONLY the final prompt paragraph.
-    `;
+        *** 🎨 STEP 3: VISUAL EXECUTION ***
+        Create the final image prompt.
+        1. **CONTAINER:** Strictly follow these UI Rules: ${strategyStack.uiGuide}
+        2. **SCENE:** Visualise the environment where this Persona (${strategyStack.identity}) lives.
+        3. **TEXT INJECTION:**
+        You MUST explicitly write: "The image features text that says: '[YOUR GENERATED TEXT]'."
+
+        **OUTPUT:** Return ONLY the final prompt paragraph.
+        `;
+    }
     
     try {
         const response = await generateWithRetry({
             model: "gemini-3-flash-preview", 
             contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
-            generationConfig: {
+            config: {
                 temperature: 0.85, 
             }
         });
@@ -106,7 +149,6 @@ export const generateAIWrittenPrompt = async (ctx: PromptContext): Promise<strin
 
     } catch (e) {
         console.error("Prompt Gen Error:", e);
-        // FIX: Ganti 'embeddedText' (yg sudah dihapus) menjadi 'strategyStack.hook'
-        return `A high quality photo for ${strategyStack.product}. Text says: "${strategyStack.hook}". Style: ${strategyStack.format}.`; 
+        return `A high quality photo for ${strategyStack.product}. Text says: "${embeddedText || strategyStack.hook}". Style: ${strategyStack.format}.`; 
     }
 };

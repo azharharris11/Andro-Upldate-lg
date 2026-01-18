@@ -92,7 +92,8 @@ export const generateCreativeImage = async (
       aspectRatio,
       rawPersona: persona,
             // Pass reference flag to prompt generator
-      hasReferenceImage: !!(referenceImageBase64 || project.productReferenceImage)
+      hasReferenceImage: !!(referenceImageBase64 || project.productReferenceImage),
+      embeddedText // Ensure embeddedText is passed through
   };
 
   // STEP 1: Generate the ONE UNIFIED NARRATIVE PROMPT
@@ -163,7 +164,7 @@ export const generateCarouselSlides = async (
   congruenceRationale?: string
 ): Promise<GenResult<{ imageUrls: string[]; prompts: string[] }>> => {
     // Logic for carousel remains largely similar but uses the new model selection logic
-    const model = "gemini-2.0-flash-exp"; // Fast thinking model for prompts
+    const model = "gemini-3-flash-preview"; // Use gemini-3-flash for text generation logic
     const imageModel = project.imageModel === 'pro' ? "gemini-3-pro-image-preview" : "gemini-2.5-flash-image";
 
     const promptGenPrompt = `

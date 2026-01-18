@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
 // Initialize the client
@@ -70,13 +69,14 @@ export async function generateWithRetry(params: any, retries = 3, delay = 1000):
       return response;
     } catch (error: any) {
       lastError = error;
-      const isNetworkError = error.message?.includes('fetch') || error.message?.includes('Response');
+      const isNetworkError = error.message?.includes('fetch') || error.message?.includes('Response') || error.message?.includes('xhr');
       const isRateLimit = error.status === 429 || error.code === 429;
       const isServerOverload = error.status === 503 || error.code === 503;
+      const isInternalError = error.status === 500 || error.code === 500; // Handle 500 Rpc failed
 
       if (i === retries - 1) break;
 
-      if (isNetworkError || isRateLimit || isServerOverload) {
+      if (isNetworkError || isRateLimit || isServerOverload || isInternalError) {
          console.warn(`API call failed (attempt ${i + 1}/${retries}). Retrying...`, error.message);
          await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
          continue;

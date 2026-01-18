@@ -1,4 +1,5 @@
 
+
 export enum NodeType {
   ROOT = 'ROOT',
   PERSONA = 'PERSONA',
@@ -20,6 +21,8 @@ export enum NodeType {
   LANDING_PAGE_NODE = 'LANDING_PAGE_NODE' // The destination for the ad
 }
 
+export type MediaType = 'IMAGE' | 'CAROUSEL' | 'VIDEO';
+
 export enum CreativeFormat {
   // --- CAROUSEL SPECIALS ---
   CAROUSEL_EDUCATIONAL = 'Educational Carousel',
@@ -27,8 +30,9 @@ export enum CreativeFormat {
   CAROUSEL_PANORAMA = 'Seamless Panorama',
   CAROUSEL_PHOTO_DUMP = 'Photo Dump',
   CAROUSEL_REAL_STORY = 'Real Story (UGC)',
+  CAROUSEL_PROCESS = 'Process/Mechanism Breakdown', // NEW
 
-  // --- PATTERN INTERRUPT ---
+  // --- PATTERN INTERRUPT (STATIC) ---
   BIG_FONT = 'Big Font Text',
   GMAIL_UX = 'Gmail Interface',
   BILLBOARD = 'Billboard',
@@ -43,11 +47,11 @@ export enum CreativeFormat {
   EDUCATIONAL_RANT = 'Green Screen Rant',
   OLD_ME_VS_NEW_ME = 'Old Me vs New Me', 
   PRESS_FEATURE = 'Press/Media Feature', 
-  LEAD_MAGNET_3D = '3D Book/Report Mockup', // NEW: Sabri Style
-  MECHANISM_XRAY = 'Mechanism X-Ray', // NEW: Medical/Scientific visualization
+  LEAD_MAGNET_3D = '3D Book/Report Mockup', 
+  MECHANISM_XRAY = 'Mechanism X-Ray', 
 
-  // --- NATIVE / SOCIAL ---
-  IG_STORY_TEXT = 'IG Story Text Overlay', // NEW: Contextual Long Copy
+  // --- NATIVE / SOCIAL (STATIC) ---
+  IG_STORY_TEXT = 'IG Story Text Overlay', 
   TWITTER_REPOST = 'Twitter Repost',
   PHONE_NOTES = 'iPhone Notes',
   AESTHETIC_MINIMAL = 'Aesthetic Minimal',
@@ -61,7 +65,7 @@ export enum CreativeFormat {
   CHAT_CONVERSATION = 'Chat Conversation',
   REMINDER_NOTIF = 'Lockscreen Reminder',
 
-  // --- LOGIC / CONVERSION ---
+  // --- LOGIC / CONVERSION (STATIC) ---
   US_VS_THEM = 'Us vs Them',
   VENN_DIAGRAM = 'Venn Diagram', 
   TESTIMONIAL_HIGHLIGHT = 'Highlighted Review', 
@@ -73,9 +77,28 @@ export enum CreativeFormat {
   ANNOTATED_PRODUCT = 'Annotated Product',
   POV_HANDS = 'POV Hands-on',
 
-  // --- AESTHETIC ---
+  // --- AESTHETIC (STATIC) ---
   COLLAGE_SCRAPBOOK = 'Scrapbook Collage',
-  CHECKLIST_TODO = 'Checklist'
+  CHECKLIST_TODO = 'Checklist',
+
+  // --- VIDEO / VSL (NEW) ---
+  VIDEO_UGC_HOOK = 'UGC Hook (15s)',
+  VIDEO_PROBLEM_SOLUTION = 'Problem/Solution VSL',
+  VIDEO_UNBOXING_ASMR = 'Unboxing / ASMR',
+  VIDEO_FOUNDER_STORY = 'Founder Story',
+  VIDEO_SKIT = 'Comedy Skit / POV'
+}
+
+export enum UGCAvatar {
+  GEN_Z_CREATOR = "Gen-Z Creator (Energetic, 20s)",
+  MILLENNIAL_MOM = "Millennial Mom (Relatable, 30s)",
+  CORPORATE_PRO = "Corporate Professional (Smart, 30-40s)",
+  GYM_RAT = "Fitness Enthusiast (Fit, Active)",
+  SKINCARE_GURU = "Skincare/Beauty Guru (Glowing, Clean)",
+  TECH_NERD = "Tech Reviewer (Geeky, Smart)",
+  OLDER_PARENT = "Older Parent/Grandparent (Wise, 50s+)",
+  ENTREPRENEUR = "Hustler/Entrepreneur (Ambitious)",
+  DOCTOR = "Medical Professional (White Coat, Trust)"
 }
 
 export enum AdIdentity {

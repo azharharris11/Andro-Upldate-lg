@@ -13,7 +13,7 @@ import {
   NodeData, Edge, NodeType, ViewMode, ProjectContext, 
   CreativeFormat, CampaignStage, MarketAwareness, 
   LanguageRegister, FunnelStage, CopyFramework, TestingTier,
-  StoryOption, BigIdeaOption, MechanismOption, HVCOOption, StrategyMode, MassDesireOption, AdIdentity 
+  StoryOption, BigIdeaOption, MechanismOption, HVCOOption, StrategyMode, MassDesireOption, AdIdentity, MediaType, UGCAvatar 
 } from './types';
 
 import * as GeminiService from './services/geminiService';
@@ -42,43 +42,66 @@ const initialNodes: NodeData[] = [
   }
 ];
 
-const FORMAT_GROUPS: Record<string, CreativeFormat[]> = {
-  "🔵 TOF (Unaware/Viral)": [
-    CreativeFormat.UGLY_VISUAL,
-    CreativeFormat.BIG_FONT,
-    CreativeFormat.MEME,
-    CreativeFormat.REDDIT_THREAD,
-    CreativeFormat.MS_PAINT,
-    CreativeFormat.CARTOON,
-    CreativeFormat.STICKY_NOTE_REALISM,
-    CreativeFormat.TWITTER_REPOST,
-    CreativeFormat.HANDHELD_TWEET,
-    CreativeFormat.REMINDER_NOTIF
-  ],
-  "🟠 MOF (Education/Trust)": [
-    CreativeFormat.GMAIL_UX,
-    CreativeFormat.LONG_TEXT,
-    CreativeFormat.WHITEBOARD,
-    CreativeFormat.IG_STORY_TEXT,
-    CreativeFormat.STORY_QNA,
-    CreativeFormat.STORY_POLL,
-    CreativeFormat.CAROUSEL_EDUCATIONAL,
-    CreativeFormat.CAROUSEL_REAL_STORY,
-    CreativeFormat.BEFORE_AFTER,
-    CreativeFormat.MECHANISM_XRAY,
-    CreativeFormat.EDUCATIONAL_RANT
-  ],
-  "🔴 BOF (Conversion/Offer)": [
-    CreativeFormat.TESTIMONIAL_HIGHLIGHT,
-    CreativeFormat.PRESS_FEATURE,
-    CreativeFormat.US_VS_THEM,
-    CreativeFormat.BENEFIT_POINTERS,
-    CreativeFormat.CAROUSEL_TESTIMONIAL,
-    CreativeFormat.LEAD_MAGNET_3D,
-    CreativeFormat.UGC_MIRROR,
-    CreativeFormat.DM_NOTIFICATION,
-    CreativeFormat.CHAT_CONVERSATION
-  ]
+// --- FORMAT LIBRARY CONFIGURATION ---
+const MEDIA_LIBRARY: Record<MediaType, Record<string, CreativeFormat[]>> = {
+  'IMAGE': {
+    "🔵 TOF (Viral/Pattern Interrupt)": [
+      CreativeFormat.UGLY_VISUAL,
+      CreativeFormat.BIG_FONT,
+      CreativeFormat.MEME,
+      CreativeFormat.REDDIT_THREAD,
+      CreativeFormat.MS_PAINT,
+      CreativeFormat.CARTOON,
+      CreativeFormat.STICKY_NOTE_REALISM,
+      CreativeFormat.TWITTER_REPOST,
+      CreativeFormat.HANDHELD_TWEET,
+      CreativeFormat.REMINDER_NOTIF
+    ],
+    "🟠 MOF (Education/Native)": [
+      CreativeFormat.GMAIL_UX,
+      CreativeFormat.LONG_TEXT,
+      CreativeFormat.WHITEBOARD,
+      CreativeFormat.IG_STORY_TEXT,
+      CreativeFormat.STORY_QNA,
+      CreativeFormat.STORY_POLL,
+      CreativeFormat.BEFORE_AFTER,
+      CreativeFormat.MECHANISM_XRAY,
+      CreativeFormat.EDUCATIONAL_RANT,
+      CreativeFormat.PHONE_NOTES,
+      CreativeFormat.SEARCH_BAR
+    ],
+    "🔴 BOF (Conversion/Offer)": [
+      CreativeFormat.TESTIMONIAL_HIGHLIGHT,
+      CreativeFormat.PRESS_FEATURE,
+      CreativeFormat.US_VS_THEM,
+      CreativeFormat.BENEFIT_POINTERS,
+      CreativeFormat.LEAD_MAGNET_3D,
+      CreativeFormat.UGC_MIRROR,
+      CreativeFormat.DM_NOTIFICATION,
+      CreativeFormat.CHAT_CONVERSATION
+    ]
+  },
+  'CAROUSEL': {
+    "📚 Educational & Value": [
+      CreativeFormat.CAROUSEL_EDUCATIONAL,
+      CreativeFormat.CAROUSEL_PROCESS,
+      CreativeFormat.CAROUSEL_REAL_STORY
+    ],
+    "✨ Aesthetic & Proof": [
+      CreativeFormat.CAROUSEL_PANORAMA,
+      CreativeFormat.CAROUSEL_PHOTO_DUMP,
+      CreativeFormat.CAROUSEL_TESTIMONIAL
+    ]
+  },
+  'VIDEO': {
+    "🎬 Direct Response & VSL": [
+      CreativeFormat.VIDEO_UGC_HOOK,
+      CreativeFormat.VIDEO_PROBLEM_SOLUTION,
+      CreativeFormat.VIDEO_UNBOXING_ASMR,
+      CreativeFormat.VIDEO_FOUNDER_STORY,
+      CreativeFormat.VIDEO_SKIT
+    ]
+  }
 };
 
 const App: React.FC = () => {
@@ -528,7 +551,7 @@ const App: React.FC = () => {
       }
   };
 
-  const handleGenerateCreatives = async (manualIdentity: AdIdentity | null) => {
+  const handleGenerateCreatives = async (manualIdentity: AdIdentity | null, manualAvatar: UGCAvatar | null) => {
       if (!pendingFormatParentId) return;
       const parentNode = nodes.find(n => n.id === pendingFormatParentId);
       if (!parentNode) return;
@@ -539,7 +562,8 @@ const App: React.FC = () => {
       const ancestry = getAncestryContext(pendingFormatParentId);
       const fullStrategyContext = {
           ...ancestry,
-          ...parentNode // Merge parent (Angle) data directly
+          ...parentNode, // Merge parent (Angle) data directly
+          avatar: manualAvatar // Add Avatar to context
       };
 
       const formatsToGen = Array.from(selectedFormats) as CreativeFormat[];
@@ -558,7 +582,7 @@ const App: React.FC = () => {
           const isHVCO = parentNode.type === NodeType.HVCO_NODE;
 
           const strategyRes = await GeminiService.generateCreativeStrategy(
-              project, fullStrategyContext, angleToUse, fmt, isHVCO, manualIdentity
+              project, fullStrategyContext, angleToUse, fmt, isHVCO, manualIdentity, manualAvatar
           );
           
           if (strategyRes.data) {
@@ -581,6 +605,7 @@ const App: React.FC = () => {
                        imageTokens = slidesRes.inputTokens + slidesRes.outputTokens;
                    }
               } else {
+                   // VIDEO FORMAT HANDLING: Ensure 9:16 aspect ratio
                    const imgRes = await GeminiService.generateCreativeImage(
                        project, 
                        fullStrategyContext, 
@@ -588,7 +613,7 @@ const App: React.FC = () => {
                        fmt, 
                        strategy.visualScene, 
                        strategy.visualStyle, 
-                       "1:1", 
+                       fmt.startsWith('Video') ? "9:16" : "1:1", 
                        strategy.embeddedText,
                        undefined,
                        strategy.congruenceRationale
@@ -614,6 +639,7 @@ const App: React.FC = () => {
                    meta: { 
                        ...ancestry.meta, 
                        angle: angleToUse, 
+                       avatar: manualAvatar, // Store avatar selection
                        concept: {
                            visualScene: strategy.visualScene,
                            visualStyle: strategy.visualStyle,
@@ -782,7 +808,7 @@ const App: React.FC = () => {
               setSelectedFormats(next);
           }}
           onConfirm={handleGenerateCreatives}
-          formatGroups={FORMAT_GROUPS}
+          formatLibrary={MEDIA_LIBRARY} 
       />
     </div>
   );

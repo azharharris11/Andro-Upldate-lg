@@ -12,7 +12,8 @@ import {
   StrategyMode,
   MarketAwareness,
   UglyAdStructure,
-  AdIdentity
+  AdIdentity,
+  UGCAvatar
 } from "../../types";
 import { ai, extractJSON, generateWithRetry } from "./client";
 import { getFormatTextGuide } from "./imageText"; 
@@ -95,7 +96,8 @@ export const generateCreativeStrategy = async (
   angle: string, 
   format: CreativeFormat,
   isHVCOFlow: boolean = false,
-  manualIdentity: AdIdentity | null = null // NEW: Accept manual identity override
+  manualIdentity: AdIdentity | null = null, // NEW: Accept manual identity override
+  manualAvatar: UGCAvatar | null = null // NEW: Accept manual avatar override
 ): Promise<GenResult<CreativeStrategyResult>> => {
   const model = "gemini-3-flash-preview";
   // SAFEGUARD: ensure angle is a string
@@ -163,6 +165,16 @@ export const generateCreativeStrategy = async (
       `;
   }
 
+  // --- 5. AVATAR INSTRUCTION (VIDEO STORYBOARD) ---
+  let avatarInstruction = "";
+  if (manualAvatar) {
+      avatarInstruction = `
+      **VISUAL SUBJECT (UGC CREATOR):**
+      The scene MUST feature this specific avatar: "${manualAvatar}".
+      The content is a "Video Storyboard", so the visual description should describe a sequence of events featuring this person.
+      `;
+  }
+
   const prompt = `
     # ROLE: Creative Director (Execution Phase)
     TASK: Visual Strategy for ${format}.
@@ -176,6 +188,8 @@ export const generateCreativeStrategy = async (
     ${keywordInstruction}
     
     ${identityInstruction}
+    
+    ${avatarInstruction}
 
     **INSTRUCTIONS FOR 'visualScene':**
     - The scene MUST match the chosen Voice Archetype.

@@ -1,5 +1,5 @@
 
-import { ProjectContext, CreativeFormat, MarketAwareness, HumanDesire } from "../../types";
+import { ProjectContext, CreativeFormat, MarketAwareness, HumanDesire, UGCAvatar } from "../../types";
 
 export interface ParsedAngle {
     cleanAngle: string;
@@ -20,21 +20,21 @@ export interface PromptContext {
     moodPrompt: string;
     culturePrompt: string;
     enhancer: string;
-
     rawPersona?: any;
     embeddedText?: string;
     aspectRatio?: string;
     subjectFocus: string;
     fullStoryContext: any;
     congruenceRationale?: string;
-    hasReferenceImage?: boolean; // Added type definition
+    hasReferenceImage?: boolean; 
 }
 
 
 /**
  * ENHANCERS: Updated for "Authentic Native" (Nano Banana Pro v2).
  * Goal: Look like a high-quality organic post, not a low-quality trashy image.
- */export const ENHANCERS = {
+ */
+export const ENHANCERS = {
     // Dulu: "High-end commercial photography..." -> SEKARANG: Corporate Candid
     PROFESSIONAL: "Shot on DSLR, neutral lighting, f/5.6 aperture (everything in focus), minimal editing, corporate documentary style, authentic skin texture.",
     
@@ -56,6 +56,11 @@ export interface PromptContext {
  * Translates abstract Persona attributes into specific PHYSICAL flaws and environmental clutter.
  */
 export const getPersonaVisualContext = (persona: any): string => {
+    // If an Avatar is explicitly selected in the context, prioritize it
+    if (persona.avatar) {
+        return getAvatarVisuals(persona.avatar);
+    }
+
     const painPoints = (persona.visceralSymptoms || []).join(", ");
     const profile = persona.profile || "";
     
@@ -75,6 +80,30 @@ export const getPersonaVisualContext = (persona: any): string => {
     `;
 };
 
+export const getAvatarVisuals = (avatar: UGCAvatar): string => {
+    switch (avatar) {
+        case UGCAvatar.GEN_Z_CREATOR:
+            return "Young adult (approx 22 years old), trendy oversized streetwear, expressive face, ring light reflection in eyes, messy background with LED lights.";
+        case UGCAvatar.MILLENNIAL_MOM:
+            return "Woman in her 30s, tired but happy eyes, wearing comfy loungewear, messy bun, holding a coffee cup, background is a real living room with kid's toys.";
+        case UGCAvatar.CORPORATE_PRO:
+            return "Professional in their late 30s, smart casual blazer, home office background, clean look, glasses, laptop visible.";
+        case UGCAvatar.GYM_RAT:
+            return "Fit individual in gym wear, slightly sweaty sheen, gym background with equipment, energetic posture, holding a water bottle.";
+        case UGCAvatar.SKINCARE_GURU:
+            return "Person with glowing skin but real texture (no filter), hair pulled back with a headband, bathroom setting, bright clean lighting, holding a product.";
+        case UGCAvatar.TECH_NERD:
+            return "Person wearing a graphic tee, sitting at a desk with multiple monitors, glasses, RGB lighting in background, holding a gadget.";
+        case UGCAvatar.OLDER_PARENT:
+            return "Person in their 50s-60s, warm smile, sensible clothing, cozy living room or kitchen background, trustworthy demeanor.";
+        case UGCAvatar.ENTREPRENEUR:
+            return "Ambitious look, sharp dress shirt, minimalist modern office or co-working space, holding a smartphone, confident gaze.";
+        case UGCAvatar.DOCTOR:
+            return "Professional wearing a white coat or scrubs, stethoscope visible, clean clinical background, reassuring and authoritative expression.";
+        default:
+            return "A realistic UGC creator, authentic appearance, not a model.";
+    }
+};
 
 export const parseAngle = (angle: string): ParsedAngle => {
     const cleanAngle = angle.trim().replace(/^"|"$/g, '');

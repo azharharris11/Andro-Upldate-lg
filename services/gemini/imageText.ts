@@ -236,6 +236,31 @@ export const getFormatTextGuide = (format: CreativeFormat): string => {
              IDENTITY RULE: Logic and Facts.`;
 
         // ============================================================
+        // GROUP 5: VIDEO & VSL SCENES (NEW)
+        // ============================================================
+        case CreativeFormat.VIDEO_UGC_HOOK:
+            return `${baseGuide}
+            STYLE: Cinematic 16:9 or 9:16 Video Still (Opening Frame).
+            VISUAL: Close-up of a person speaking directly to camera (UGC Style).
+            EXPRESSION: Shocked, Urgent, or Confessional.
+            TEXT OVERLAY: Big, bold TikTok-style hook text at the top.
+            LIGHTING: Ring light or natural window light. Authentic.`;
+            
+        case CreativeFormat.VIDEO_PROBLEM_SOLUTION:
+            return `${baseGuide}
+            STYLE: Cinematic 16:9 Video Still (B-Roll).
+            VISUAL: Dramatic representation of the problem (e.g., someone holding their back in pain, or a messy room).
+            VIBE: High contrast, moody, cinematic color grading.
+            TEXT OVERLAY: Minimal subtitle at bottom.`;
+            
+        case CreativeFormat.VIDEO_UNBOXING_ASMR:
+            return `${baseGuide}
+            STYLE: Top-down or POV hands-on shot.
+            VISUAL: Hands opening the product packaging on a clean aesthetic surface.
+            FOCUS: Texture, packaging details, satisfaction.
+            LIGHTING: Soft, bright, high-key.`;
+
+        // ============================================================
         // DEFAULTS & FALLBACKS
         // ============================================================
         
